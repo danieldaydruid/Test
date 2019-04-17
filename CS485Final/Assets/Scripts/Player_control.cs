@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class Player_control : MonoBehaviour {
-	
+	public GameObject PushBox;
 	public int count = 0;
 	public bool cursor_check = false;
 	public float speed = 6.0F;
@@ -13,14 +13,18 @@ public class Player_control : MonoBehaviour {
 	public Vector3 lastPos;
 	private Vector3 moveDirection = Vector3.zero;
 	public CharacterController controller;
+	public GameObject RaycastObject;
 
 	void Start() {
 	// Store reference to attached component
 		controller = GetComponent<CharacterController>();
+		PushBox = GameObject.Find("PushBox");
+		RaycastObject = GameObject.Find("/Player/RaycastObject");
 	}
 
 	void Update() {
 		PlayerIsMoving();
+		PlayerIsInteractingWithBox();
 		if(Input.GetKey(KeyCode.Escape)) {
 				cursor_check = false;
 			}
@@ -80,7 +84,7 @@ public class Player_control : MonoBehaviour {
 	moveDirection.y -= gravity * Time.deltaTime;
 	// Move Character Controller
 		controller.Move(moveDirection * Time.deltaTime);
-		}
+	}
 	void OnTriggerEnter(Collider other) {
 		if (other.gameObject.CompareTag("Pick Up")) {
 			other.gameObject.SetActive(false);
@@ -96,6 +100,13 @@ public class Player_control : MonoBehaviour {
 			Destroy(GameObject.Find("ZombieCube_2"));
 		}
 	}
+	void OnCollisionEnter(Collision col)
+	{
+		if(col.gameObject.name == "PushBox")
+		{
+			Destroy(col.gameObject);
+		}
+	}
 	public bool PlayerIsMoving()
 	{
 		bool temp = false;
@@ -104,5 +115,36 @@ public class Player_control : MonoBehaviour {
 		else temp = true;
 		lastPos = curPos;
 		return temp;
+	}
+	public bool PlayerIsInteractingWithBox()
+	{
+		RaycastHit hit;
+		Vector3 fwd = RaycastObject.transform.TransformDirection(Vector3.forward);
+		if (Physics.Raycast(RaycastObject.transform.position, fwd, out hit, 1))
+		{
+			if(hit.transform.gameObject.name == "PushBox")
+			{
+				if(Input.GetMouseButton(0)) {
+					PushBox.transform.parent = transform;
+					return true;
+				}
+				if(Input.GetMouseButtonUp(0)) {
+					PushBox.transform.parent = null;
+					return false;
+				}
+			}
+		}
+		/*if(Vector3.Distance(PushBox.transform.position, transform.position) <= 2.0f )
+		{
+			if(Input.GetMouseButton(0)) {
+				PushBox.transform.parent = transform;
+				return true;
+			}
+			if(Input.GetMouseButtonUp(0)) {
+				PushBox.transform.parent = null;
+				return false;
+			}
+		}*/
+		return false;
 	}
 }
